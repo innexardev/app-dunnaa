@@ -2,24 +2,32 @@
  * Tab navigator layout
  */
 import React from 'react';
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography } from '../../src/theme';
 
+const TAB_BAR_HEIGHT = 56;
+
 export default function TabLayout() {
+    const insets = useSafeAreaInsets();
+    const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
                 tabBarActiveTintColor: colors.primary,
                 tabBarInactiveTintColor: colors.textLight,
+                tabBarHideOnKeyboard: true,
                 tabBarStyle: {
                     backgroundColor: colors.surface,
                     borderTopColor: colors.borderLight,
                     borderTopWidth: 1,
                     paddingTop: 6,
-                    paddingBottom: 8,
-                    height: 72,
+                    paddingBottom: bottomInset,
+                    height: TAB_BAR_HEIGHT + bottomInset,
                 },
                 tabBarLabelStyle: {
                     ...typography.caption,

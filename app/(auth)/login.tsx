@@ -7,6 +7,7 @@ import {
     Platform, Alert, StyleSheet, ActivityIndicator, ScrollView, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
@@ -78,8 +79,15 @@ export default function Login() {
             setIsRegistering(!data.is_registered);
             setStep('otp');
             setTimeout(() => inputRefs.current[0]?.focus(), 300);
-        } catch {
-            Alert.alert('Erro', 'Não foi possível enviar o código. Tente novamente.');
+        } catch (error) {
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.error?.message
+                    ?? error.response?.data?.message
+                    ?? (error.message === 'Network Error'
+                        ? 'Sem conexão com o servidor. Verifique sua internet.'
+                        : error.message)
+                : 'Não foi possível enviar o código. Tente novamente.';
+            Alert.alert('Erro', message);
         } finally {
             setIsLoading(false);
         }
@@ -124,7 +132,7 @@ export default function Login() {
             {/* Logo / Branding */}
             <View style={styles.branding}>
                 <Image
-                    source={require('../../assets/logo-branco.png')}
+                    source={require('../../assets/logo-dunnaa-full.png')}
                     style={styles.logoImage}
                     resizeMode="contain"
                 />
@@ -254,9 +262,17 @@ export default function Login() {
                 )}
             </View>
 
-            <Text style={styles.terms}>
-                Ao continuar, você aceita os Termos de Uso e a Política de Privacidade.
-            </Text>
+            <View style={styles.termsRow}>
+                <Text style={styles.terms}>Ao continuar, você aceita os </Text>
+                <TouchableOpacity onPress={() => router.push('/profile/terms')}>
+                    <Text style={styles.termsLink}>Termos de Uso</Text>
+                </TouchableOpacity>
+                <Text style={styles.terms}> e a </Text>
+                <TouchableOpacity onPress={() => router.push('/profile/privacy')}>
+                    <Text style={styles.termsLink}>Política de Privacidade</Text>
+                </TouchableOpacity>
+                <Text style={styles.terms}>.</Text>
+            </View>
         </KeyboardAvoidingView>
     );
 }
@@ -272,8 +288,8 @@ const styles = StyleSheet.create({
         marginBottom: spacing['4xl'],
     },
     logoImage: {
-        width: 200,
-        height: 72,
+        width: 260,
+        height: 96,
         marginBottom: spacing.lg,
     },
     tagline: {
@@ -384,13 +400,22 @@ const styles = StyleSheet.create({
         ...typography.bodySm,
         color: colors.textMuted,
     },
-    terms: {
-        ...typography.caption,
-        color: colors.textLight,
-        textAlign: 'center',
+    termsRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
         position: 'absolute',
         bottom: 40,
         left: spacing['2xl'],
         right: spacing['2xl'],
+    },
+    terms: {
+        ...typography.caption,
+        color: colors.textLight,
+        textAlign: 'center',
+    },
+    termsLink: {
+        ...typography.captionMedium,
+        color: colors.primary,
     },
 });
