@@ -1,8 +1,7 @@
 /**
- * Root layout — providers, splash screen, navigation
+ * Root layout — web/PWA (sem push, sem auto-update APK)
  */
 import React, { useEffect, useCallback } from 'react';
-import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,24 +14,13 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { LocationProvider } from '../src/contexts/LocationContext';
-import { AppUpdateModal } from '../src/components/AppUpdateModal';
-import { useAppUpdate } from '../src/hooks/useAppUpdate';
-import { usePushNotifications } from '../src/hooks/usePushNotifications';
+import { SafariWebUi } from '../src/components/SafariWebUi';
+import { IosInstallModal } from '../src/components/IosInstallModal';
 import { colors } from '../src/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-function PushRegistration() {
-    usePushNotifications();
-    return null;
-}
-
-function AppUpdateChecker() {
-    const update = useAppUpdate();
-    return <AppUpdateModal state={update} />;
-}
-
-export default function RootLayout() {
+export default function RootLayoutWeb() {
     const [fontsLoaded] = useFonts({
         PlusJakartaSans_400Regular,
         PlusJakartaSans_500Medium,
@@ -50,15 +38,6 @@ export default function RootLayout() {
         onLayoutRootView();
     }, [onLayoutRootView]);
 
-    useEffect(() => {
-        if (Platform.OS !== 'android') return;
-        void import('expo-navigation-bar').then((NavigationBar) => {
-            void NavigationBar.setBackgroundColorAsync(colors.surface);
-            void NavigationBar.setButtonStyleAsync('dark');
-            void NavigationBar.setPositionAsync('relative');
-        });
-    }, []);
-
     if (!fontsLoaded) {
         return null;
     }
@@ -66,8 +45,8 @@ export default function RootLayout() {
     return (
         <AuthProvider>
             <LocationProvider>
-                <PushRegistration />
-                <AppUpdateChecker />
+                <SafariWebUi />
+                <IosInstallModal />
                 <StatusBar style="dark" />
                 <Stack
                     screenOptions={{

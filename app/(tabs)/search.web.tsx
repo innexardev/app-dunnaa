@@ -1,10 +1,9 @@
 /**
- * Search / Results screen with Map/List toggle, filters and map bottom sheet
+ * Search screen — web (lista; mapa nativo indisponível no PWA)
  */
-import React, { useState, useEffect, useCallback, ComponentType } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
-    Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,23 +17,11 @@ import {
     DEFAULT_FILTERS,
     type SearchFilters,
 } from '../../src/components/SearchFiltersModal';
-import { MapEstablishmentSheet } from '../../src/components/MapEstablishmentSheet';
 import { establishmentService, Establishment, SearchParams } from '../../src/services/establishments';
 import { colors, typography, spacing, radius } from '../../src/theme';
 import { useTabBarPadding } from '../../src/hooks/useTabBarPadding';
 
 type SortOption = 'distance' | 'rating' | 'price';
-type ViewMode = 'list' | 'map';
-
-let MapViewComponent: ComponentType<any> | null = null;
-let MarkerComponent: ComponentType<any> | null = null;
-try {
-    const maps = require('react-native-maps');
-    MapViewComponent = maps.default;
-    MarkerComponent = maps.Marker;
-} catch {
-    // map unavailable
-}
 
 const sortOptions: { key: SortOption; label: string; icon: string }[] = [
     { key: 'distance', label: 'Distância', icon: 'location-outline' },
@@ -68,7 +55,7 @@ function buildParams(
     return params;
 }
 
-export default function Search() {
+export default function SearchWeb() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const tabBarPadding = useTabBarPadding();
@@ -81,12 +68,9 @@ export default function Search() {
     const [sortBy, setSortBy] = useState<SortOption>(permissionGranted ? 'distance' : 'rating');
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
-    const [viewMode, setViewMode] = useState<ViewMode>('list');
     const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
     const [filtersOpen, setFiltersOpen] = useState(false);
-    const [selectedMapEst, setSelectedMapEst] = useState<Establishment | null>(null);
 
-    const mapAvailable = MapViewComponent != null && MarkerComponent != null;
     const filterCount = [
         filters.category !== 'all',
         filters.radiusKm != null,
@@ -130,15 +114,6 @@ export default function Search() {
         }
     };
 
-    const initialRegion = {
-        latitude: coords?.latitude || -23.5505,
-        longitude: coords?.longitude || -46.6333,
-        latitudeDelta: 0.08,
-        longitudeDelta: 0.08,
-    };
-
-    const mappableResults = results.filter((r) => r.latitude != null && r.longitude != null);
-
     return (
         <View style={[styles.container, { paddingTop: insets.top + spacing.md }]}>
             <View style={styles.searchRow}>
@@ -175,98 +150,36 @@ export default function Search() {
                         </TouchableOpacity>
                     ))}
                 </View>
-
-                {mapAvailable && (
-                    <TouchableOpacity
-                        style={[styles.viewToggle, viewMode === 'map' && styles.viewToggleActive]}
-                        onPress={() => {
-                            setSelectedMapEst(null);
-                            setViewMode(viewMode === 'list' ? 'map' : 'list');
-                        }}
-                    >
-                        <Ionicons
-                            name={viewMode === 'list' ? 'map-outline' : 'list-outline'}
-                            size={18}
-                            color={viewMode === 'map' ? colors.white : colors.primary}
-                        />
-                    </TouchableOpacity>
-                )}
             </View>
 
-            {viewMode === 'map' && mapAvailable && MapViewComponent && MarkerComponent ? (
-                <View style={styles.mapContainer}>
-                    <MapViewComponent
-                        style={styles.map}
-                        initialRegion={initialRegion}
-                        showsUserLocation={permissionGranted}
-                        showsMyLocationButton
-                        onPress={() => setSelectedMapEst(null)}
-                    >
-                        {mappableResults.map((est) => (
-                            <MarkerComponent
-                                key={est.id}
-                                coordinate={{
-                                    latitude: est.latitude!,
-                                    longitude: est.longitude!,
-                                }}
-                                title={est.name}
-                                description={est.address}
-                                pinColor={est.is_sponsored ? colors.star : colors.primary}
-                                onPress={() => setSelectedMapEst(est)}
-                            />
-                        ))}
-                    </MapViewComponent>
-
-                    <View style={styles.mapBadge}>
-                        <Ionicons name="location" size={14} color={colors.primary} />
-                        <Text style={styles.mapBadgeText}>
-                            {mappableResults.length} {mappableResults.length === 1 ? 'local' : 'locais'}
-                            {results.some((r) => r.is_sponsored) ? ' · patrocinados' : ''}
-                        </Text>
-                    </View>
-
-                    {isLoading && (
-                        <View style={styles.mapLoading}>
-                            <ActivityIndicator color={colors.primary} size="small" />
-                        </View>
-                    )}
-
-                    <MapEstablishmentSheet
-                        establishment={selectedMapEst}
-                        onClose={() => setSelectedMapEst(null)}
-                        onOpen={(id) => router.push(`/establishment/${id}`)}
+            <FlatList
+                data={results}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={[styles.list, { paddingBottom: tabBarPadding }]}
+                showsVerticalScrollIndicator={false}
+                onEndReached={loadMore}
+                onEndReachedThreshold={0.3}
+                renderItem={({ item }) => (
+                    <EstablishmentCard
+                        establishment={item}
+                        onPress={() => router.push(`/establishment/${item.id}`)}
                     />
-                </View>
-            ) : (
-                <FlatList
-                    data={results}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={[styles.list, { paddingBottom: tabBarPadding }]}
-                    showsVerticalScrollIndicator={false}
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.3}
-                    renderItem={({ item }) => (
-                        <EstablishmentCard
-                            establishment={item}
-                            onPress={() => router.push(`/establishment/${item.id}`)}
+                )}
+                ListEmptyComponent={
+                    !isLoading ? (
+                        <EmptyState
+                            icon="search-outline"
+                            title="Nenhum resultado"
+                            subtitle="Tente outros termos ou ajuste os filtros."
                         />
-                    )}
-                    ListEmptyComponent={
-                        !isLoading ? (
-                            <EmptyState
-                                icon="search-outline"
-                                title="Nenhum resultado"
-                                subtitle="Tente outros termos ou ajuste os filtros."
-                            />
-                        ) : null
-                    }
-                    ListFooterComponent={
-                        isLoading ? (
-                            <ActivityIndicator color={colors.primary} style={styles.loader} />
-                        ) : null
-                    }
-                />
-            )}
+                    ) : null
+                }
+                ListFooterComponent={
+                    isLoading ? (
+                        <ActivityIndicator color={colors.primary} style={styles.loader} />
+                    ) : null
+                }
+            />
 
             <SearchFiltersModal
                 visible={filtersOpen}
@@ -316,37 +229,6 @@ const styles = StyleSheet.create({
     sortChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     sortText: { ...typography.caption, color: colors.textMuted },
     sortTextActive: { color: colors.white },
-    viewToggle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    viewToggleActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     list: { paddingHorizontal: spacing.xl },
     loader: { paddingVertical: spacing.xl },
-    mapContainer: { flex: 1, position: 'relative' },
-    map: { flex: 1 },
-    mapBadge: {
-        position: 'absolute',
-        top: 12,
-        alignSelf: 'center',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: colors.white,
-        borderRadius: 20,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        ...Platform.select({
-            ios: { shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
-            android: { elevation: 4 },
-        }),
-    },
-    mapBadgeText: { fontSize: 12, fontWeight: '600', color: colors.textMain },
-    mapLoading: { position: 'absolute', top: 60, alignSelf: 'center' },
 });

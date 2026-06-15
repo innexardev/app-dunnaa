@@ -10,11 +10,12 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { favoritesService } from '../../src/services/favorites';
 import type { Establishment } from '../../src/services/establishments';
 import { colors, typography, spacing } from '../../src/theme';
-import { getTabBarPadding } from '../../src/theme/layout';
+import { useTabBarPadding } from '../../src/hooks/useTabBarPadding';
 
 export default function Favorites() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const [favorites, setFavorites] = useState<Establishment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -37,7 +38,7 @@ export default function Favorites() {
             <FlatList
                 data={favorites}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={[styles.list, { paddingBottom: getTabBarPadding(insets.bottom) }]}
+                contentContainerStyle={[styles.list, { paddingBottom: tabBarPadding }]}
                 showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} colors={[colors.primary]} />}
                 renderItem={({ item }) => (

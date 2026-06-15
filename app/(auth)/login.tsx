@@ -124,11 +124,8 @@ export default function Login() {
         }
     };
 
-    return (
-        <KeyboardAvoidingView
-            style={[styles.container, { paddingTop: insets.top + spacing['3xl'] }]}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+    const loginBody = (
+        <>
             {/* Logo / Branding */}
             <View style={styles.branding}>
                 <Image
@@ -273,6 +270,27 @@ export default function Login() {
                 </TouchableOpacity>
                 <Text style={styles.terms}>.</Text>
             </View>
+        </>
+    );
+
+    if (Platform.OS === 'web') {
+        return (
+            <ScrollView
+                style={[styles.container, { paddingTop: insets.top + spacing['3xl'] }]}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + spacing['2xl'] }}
+                keyboardShouldPersistTaps="handled"
+            >
+                {loginBody}
+            </ScrollView>
+        );
+    }
+
+    return (
+        <KeyboardAvoidingView
+            style={[styles.container, { paddingTop: insets.top + spacing['3xl'] }]}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            {loginBody}
         </KeyboardAvoidingView>
     );
 }

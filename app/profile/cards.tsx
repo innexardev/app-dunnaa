@@ -154,8 +154,23 @@ export default function CardsScreen() {
                                         <TextInput style={styles.input} placeholder="Nome no cartão" value={holder} onChangeText={setHolder} placeholderTextColor={colors.textLight} />
                                         <TextInput style={styles.input} placeholder="Número do cartão" value={number} onChangeText={(t) => setNumber(formatCardNumber(t))} keyboardType="number-pad" placeholderTextColor={colors.textLight} />
                                         <View style={styles.row}>
-                                            <TextInput style={[styles.input, styles.half]} placeholder="MM/AA" value={expiry} onChangeText={(t) => setExpiry(formatExpiry(t))} keyboardType="number-pad" placeholderTextColor={colors.textLight} />
-                                            <TextInput style={[styles.input, styles.half]} placeholder="CVV" value={cvv} onChangeText={(t) => setCvv(t.replace(/\D/g, '').slice(0, 4))} keyboardType="number-pad" secureTextEntry placeholderTextColor={colors.textLight} />
+                                            <TextInput
+                                                style={[styles.input, styles.expiryInput]}
+                                                placeholder="MM/AA"
+                                                value={expiry}
+                                                onChangeText={(t) => setExpiry(formatExpiry(t))}
+                                                keyboardType="number-pad"
+                                                placeholderTextColor={colors.textLight}
+                                            />
+                                            <TextInput
+                                                style={[styles.input, styles.cvvInput]}
+                                                placeholder="CVV"
+                                                value={cvv}
+                                                onChangeText={(t) => setCvv(t.replace(/\D/g, '').slice(0, 4))}
+                                                keyboardType="number-pad"
+                                                secureTextEntry
+                                                placeholderTextColor={colors.textLight}
+                                            />
                                         </View>
                                         <View style={styles.formActions}>
                                             <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowForm(false)}>
@@ -233,6 +248,7 @@ const styles = StyleSheet.create({
         borderRadius: radius.xl,
         padding: spacing.xl,
         marginBottom: spacing.lg,
+        overflow: 'hidden',
         ...shadow.sm,
     },
     formTitle: { ...typography.h4, color: colors.textMain, marginBottom: spacing.md },
@@ -257,8 +273,20 @@ const styles = StyleSheet.create({
         ...typography.body,
         color: colors.textMain,
     },
-    row: { flexDirection: 'row', gap: spacing.md },
-    half: { flex: 1 },
+    row: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        width: '100%',
+    },
+    expiryInput: {
+        flex: 1,
+        minWidth: 0,
+    },
+    cvvInput: {
+        width: Platform.OS === 'web' ? 100 : 96,
+        flexGrow: 0,
+        flexShrink: 0,
+    },
     formActions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.sm },
     cancelBtn: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
     cancelBtnText: { ...typography.bodyMedium, color: colors.textMuted },

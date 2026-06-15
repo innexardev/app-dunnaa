@@ -70,7 +70,19 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single",
+      "name": "DUNNAA",
+      "shortName": "DUNNAA",
+      "description": "Agende barbearias, salões e estética pelo celular.",
+      "lang": "pt-BR",
+      "themeColor": "#005f73",
+      "backgroundColor": "#0a0a0a",
+      "display": "standalone",
+      "orientation": "portrait"
+    },
+    "experiments": {
+      "baseUrl": "/app"
     },
     "plugins": [
       "expo-router",

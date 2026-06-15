@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { colors, typography, spacing, radius, shadow } from '../../src/theme';
-import { getTabBarPadding } from '../../src/theme/layout';
+import { useTabBarPadding } from '../../src/hooks/useTabBarPadding';
 
 type MenuItem = {
     icon: string;
@@ -82,6 +82,7 @@ function MenuSection({
 export default function Profile() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const { user, logout, isAuthenticated } = useAuth();
 
     const navigate = (item: MenuItem) => {
@@ -121,7 +122,7 @@ export default function Profile() {
     return (
         <ScrollView
             style={[styles.container, { paddingTop: insets.top + spacing.lg }]}
-            contentContainerStyle={{ paddingBottom: getTabBarPadding(insets.bottom) }}
+            contentContainerStyle={{ paddingBottom: tabBarPadding }}
             showsVerticalScrollIndicator={false}
         >
             <View style={styles.userSection}>

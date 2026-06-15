@@ -12,13 +12,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { appointmentService, Appointment } from '../../src/services/appointments';
 import { EmptyState } from '../../src/components/EmptyState';
 import { colors, typography, spacing, radius, shadow } from '../../src/theme';
-import { getTabBarPadding } from '../../src/theme/layout';
+import { useTabBarPadding } from '../../src/hooks/useTabBarPadding';
 
 type TabKey = 'upcoming' | 'past';
 
 export default function Appointments() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const [tab, setTab] = useState<TabKey>('upcoming');
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -131,7 +132,7 @@ export default function Appointments() {
                 data={appointments}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
-                contentContainerStyle={[styles.list, { paddingBottom: getTabBarPadding(insets.bottom) }]}
+                contentContainerStyle={[styles.list, { paddingBottom: tabBarPadding }]}
                 showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} colors={[colors.primary]} />}
                 ListEmptyComponent={

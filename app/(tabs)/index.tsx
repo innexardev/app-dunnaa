@@ -16,16 +16,25 @@ import { CategoryChip } from '../../src/components/CategoryChip';
 import { EstablishmentCard } from '../../src/components/EstablishmentCard';
 import { establishmentService, Establishment } from '../../src/services/establishments';
 import { HOME_CATEGORIES } from '../../src/constants/categories';
+import { useTabBarPadding } from '../../src/hooks/useTabBarPadding';
 import { colors, typography, spacing, radius, shadow } from '../../src/theme';
-import { getTabBarPadding } from '../../src/theme/layout';
 
 const categories = HOME_CATEGORIES;
 
 export default function Home() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const tabBarPadding = useTabBarPadding();
     const { user } = useAuth();
-    const { city, state, coords, permissionGranted, requestPermission } = useLocation();
+    const { city, state, coords, permissionGranted, isLoading: locationLoading, requestPermission } = useLocation();
+
+    const locationLabel = locationLoading
+        ? 'Buscando localização...'
+        : city && state
+            ? `${city} - ${state}`
+            : coords
+                ? 'Localização ativa'
+                : 'Toque para permitir localização';
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -75,7 +84,7 @@ export default function Home() {
     return (
         <ScrollView
             style={styles.container}
-            contentContainerStyle={{ paddingBottom: getTabBarPadding(insets.bottom) }}
+            contentContainerStyle={{ paddingBottom: tabBarPadding }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />}
             showsVerticalScrollIndicator={false}
         >
@@ -106,11 +115,9 @@ export default function Home() {
                 <View style={styles.headerTop}>
                     <View style={styles.greetingBlock}>
                         <Text style={styles.greeting}>Olá, {firstName}</Text>
-                        <TouchableOpacity style={styles.locationRow} onPress={() => !permissionGranted && requestPermission()}>
+                        <TouchableOpacity style={styles.locationRow} onPress={() => void requestPermission()}>
                             <Ionicons name="location" size={16} color={colors.accent} />
-                            <Text style={styles.locationText}>
-                                {city && state ? `${city} - ${state}` : 'Definir localização'}
-                            </Text>
+                            <Text style={styles.locationText}>{locationLabel}</Text>
                             <Ionicons name="chevron-down" size={14} color={colors.accent} />
                         </TouchableOpacity>
                     </View>
@@ -186,8 +193,8 @@ export default function Home() {
                     <View style={styles.emptyNearby}>
                         <Ionicons name="business-outline" size={40} color={colors.textLight} />
                         <Text style={styles.emptyText}>Nenhum estabelecimento encontrado.</Text>
-                        {!permissionGranted && (
-                            <TouchableOpacity style={styles.locationBtn} onPress={requestPermission}>
+                        {!coords && (
+                            <TouchableOpacity style={styles.locationBtn} onPress={() => void requestPermission()}>
                                 <Ionicons name="location" size={16} color={colors.white} />
                                 <Text style={styles.locationBtnText}>Usar minha localização</Text>
                             </TouchableOpacity>
